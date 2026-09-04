@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+*.pth
+*.hef
+.lgd-nfy*
+.DS_Store
