@@ -1,4 +1,4 @@
-# PiCard
+# PiCard (TODO: check if PCA ESC control is working)
 
 OLED stats display + PCA9685 servo/motor (ESC) control for the Raspberry Pi 5 (with AI HAT+ 2).
 
