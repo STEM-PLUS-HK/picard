@@ -25,30 +25,31 @@ picard/
 The ESC is driven like a servo: `0` = neutral, positive = forward, negative = reverse.
 Calibration lives in `~/piracer_conf.json` (created on first run — edit duty cycles there, not in code).
 
-## Quick install (one shot)
+## Quick install (fresh SD card)
 
-Fresh SD card → fully working system:
+Two steps — hardware first, then software. Run as your normal user, NOT root.
 
 ```bash
-# 1. clone BOTH repos first (git can't clone into ~/PiRacer after the venv exists)
-git clone <PiRacer-repo> ~/PiRacer
-git clone <this-repo> ~/picard
+# Step 1: hardware layer (camera, Hailo NPU driver, I2C, base packages)
+curl -fsSL https://raw.githubusercontent.com/STEM-PLUS-HK/picard/main/start_step1.sh | bash
+sudo reboot   # required: activates I2C + Hailo driver
 
-# 2. run the installer as your normal user, NOT root
-cd ~/picard
-./install.sh
+# Step 2: software layer (clones this repo + PiRacer_YOLO, installs services)
+curl -fsSL https://raw.githubusercontent.com/STEM-PLUS-HK/picard/main/start_step2.sh | bash
 
-# 3. reboot (I2C + Hailo driver need it)
-sudo reboot
-
-# 4. sanity-check everything
+# Verify
 ~/picard/test.sh
 
-# 5. copy model files (not in git) into ~/PiRacer:
-#    best_steering_model_xy.pth, best_hailo_model/best.hef + metadata.yaml
+# Copy model files (not in git) into ~/PiRacer:
+#   best_steering_model_xy.pth, best_hailo_model/best.hef + metadata.yaml
 ```
 
+One-liner alternative: `curl -fsSL .../start_all.sh | bash` runs step 1 then tells you to reboot and run step 2.
+
 JupyterLab: `http://<pi-ip>:8888/lab` (passwordless — trusted LAN only).
+
+> Re-running anything is safe: `start_step2.sh` pulls instead of re-cloning,
+> `install.sh` rewrites the services, and step 1's apt/raspi-config calls are idempotent.
 
 ## Manual install
 

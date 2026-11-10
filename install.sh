@@ -1,5 +1,7 @@
 #!/bin/bash
-# PiCarD one-shot installer: OLED display service + JupyterLab service (Raspberry Pi 5)
+# PiCarD installer: python package + OLED display service + JupyterLab service.
+# Hardware setup (camera / Hailo / I2C / apt) lives in start_step1.sh — run it first.
+#
 # Run as the normal user (e.g. admin), NOT as root:
 #   cd ~/picard && ./install.sh
 set -e
@@ -13,17 +15,10 @@ PICARD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PIRACER_DIR="$HOME/PiRacer"
 VENV="$PIRACER_DIR/.venv"
 
-echo "==> [1/6] apt packages (incl. Hailo NPU driver for AI HAT+ 2)"
-sudo apt update
-sudo apt install -y python3-pip python3-pil python3-smbus python3-venv i2c-tools hailo-all
-
-echo "==> [2/6] enable I2C (reboot required if this changes the setting)"
-sudo raspi-config nonint do_i2c 0
-
-echo "==> [3/6] install picard python package"
+echo "==> [1/4] install picard python package"
 pip3 install "$PICARD_DIR" --break-system-packages
 
-echo "==> [4/6] OLED display service"
+echo "==> [2/4] OLED display service"
 sudo tee /etc/systemd/system/picard-oled.service > /dev/null <<EOF
 [Unit]
 Description=PiCard OLED Display
@@ -41,7 +36,7 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-echo "==> [5/6] Jupyter venv at $VENV"
+echo "==> [3/4] Jupyter venv at $VENV"
 mkdir -p "$PIRACER_DIR"
 python3 -m venv --system-site-packages "$VENV"
 "$VENV/bin/pip" install --upgrade pip
@@ -49,7 +44,7 @@ python3 -m venv --system-site-packages "$VENV"
 # ponytail: PyPI aarch64 torch wheels are CPU-only, no CUDA cleanup needed on Pi
 "$VENV/bin/pip" install torch torchvision
 
-echo "==> [6/6] Jupyter service (passwordless, LAN only!)"
+echo "==> [4/4] Jupyter service (passwordless, LAN only!)"
 sudo tee /etc/systemd/system/pidemo-jupyter.service > /dev/null <<EOF
 [Unit]
 Description=PiRacer JupyterLab
@@ -78,4 +73,3 @@ sudo systemctl enable --now pidemo-jupyter.service
 
 echo
 echo "Install complete. Verify with:  $PICARD_DIR/test.sh"
-echo "If I2C was just enabled, reboot first:  sudo reboot"
